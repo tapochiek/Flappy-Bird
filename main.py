@@ -21,7 +21,6 @@ MESSAGE_HEIGHT = 267
 ROTATE_UP = 25
 ROTATE_DOWN = -90
 
-# Загрузка изображений
 BACKGROUND = pygame.transform.scale(pygame.image.load('assets/background.png'), (SCREEN_WIDTH, SCREEN_HEIGHT))
 BIRD_IMG = pygame.transform.scale(pygame.image.load('assets/bird.png'), (BIRD_WIDTH, BIRD_HEIGHT))
 PIPE_IMG = pygame.transform.scale(pygame.image.load('assets/pipe.png'), (PIPE_WIDTH, PIPE_HEIGHT))
@@ -32,7 +31,6 @@ RICKROLL_VIDEO_PATH = 'assets/Rick Astley - Never Gonna Give You Up (Official Mu
 
 NUMBERS = [pygame.image.load(f'assets/{i}.png') for i in range(10)]
 
-# Загрузка звуков
 JUMP_SFX = pygame.mixer.Sound('assets/jump.wav')
 HIT_SFX = pygame.mixer.Sound('assets/hit.wav')
 POINT_SFX = pygame.mixer.Sound('assets/point.wav')
@@ -81,7 +79,7 @@ class Pipe(pygame.sprite.Sprite):
     def __init__(self, x, y, is_bottom):
         super().__init__()
         self.image = PIPE_IMG
-        self.passed = False  # Добавляем флаг для отслеживания пройденности
+        self.passed = False 
         if not is_bottom:
             self.image = pygame.transform.flip(self.image, False, True)
             self.rect = self.image.get_rect(midbottom=(x, y - PIPE_GAP // 2))
@@ -187,7 +185,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKQUOTE:  # Use tilde key for console toggle
+                if event.key == pygame.K_BACKQUOTE: 
                     show_console = not show_console
                 elif event.key == pygame.K_RETURN:
                     if show_console:
