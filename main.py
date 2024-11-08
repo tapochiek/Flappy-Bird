@@ -1,13 +1,12 @@
 import pygame
 import random
-from moviepy.editor import VideoFileClip
 
 pygame.init()
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
 GRAVITY = 0.25
-BIRD_JUMP = -6.5
+BIRD_JUMP = -6.0
 PIPE_GAP = 150
 PIPE_WIDTH = 52
 PIPE_HEIGHT = 500
@@ -20,14 +19,15 @@ MESSAGE_WIDTH = 184
 MESSAGE_HEIGHT = 267
 ROTATE_UP = 25
 ROTATE_DOWN = -90
+FPS = 60
 
+# Загрузка ресурсов
 BACKGROUND = pygame.transform.scale(pygame.image.load('assets/background.png'), (SCREEN_WIDTH, SCREEN_HEIGHT))
 BIRD_IMG = pygame.transform.scale(pygame.image.load('assets/bird.png'), (BIRD_WIDTH, BIRD_HEIGHT))
 PIPE_IMG = pygame.transform.scale(pygame.image.load('assets/pipe.png'), (PIPE_WIDTH, PIPE_HEIGHT))
 BASE_IMG = pygame.transform.scale(pygame.image.load('assets/base.png'), (SCREEN_WIDTH, BASE_HEIGHT))
 GAME_OVER_IMG = pygame.transform.scale(pygame.image.load('assets/gameover.png'), (GAME_OVER_WIDTH, GAME_OVER_HEIGHT))
 MESSAGE_IMG = pygame.transform.scale(pygame.image.load('assets/message.png'), (MESSAGE_WIDTH, MESSAGE_HEIGHT))
-RICKROLL_VIDEO_PATH = 'assets/Rick Astley - Never Gonna Give You Up (Official Music Video).mp4'
 
 NUMBERS = [pygame.image.load(f'assets/{i}.png') for i in range(10)]
 
@@ -37,6 +37,7 @@ POINT_SFX = pygame.mixer.Sound('assets/point.wav')
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Flappy Bird')
+
 
 class Bird(pygame.sprite.Sprite):
     def __init__(self, noclip):
@@ -75,11 +76,12 @@ class Bird(pygame.sprite.Sprite):
             self.dead = True
             HIT_SFX.play()
 
+
 class Pipe(pygame.sprite.Sprite):
     def __init__(self, x, y, is_bottom):
         super().__init__()
         self.image = PIPE_IMG
-        self.passed = False 
+        self.passed = False
         if not is_bottom:
             self.image = pygame.transform.flip(self.image, False, True)
             self.rect = self.image.get_rect(midbottom=(x, y - PIPE_GAP // 2))
@@ -90,6 +92,7 @@ class Pipe(pygame.sprite.Sprite):
         self.rect.x -= 3
         if self.rect.x < -self.rect.width:
             self.kill()
+
 
 class Base:
     def __init__(self):
@@ -105,6 +108,7 @@ class Base:
         self.x -= 3
         if self.x <= -self.image.get_width():
             self.x = 0
+
 
 def main():
     clock = pygame.time.Clock()
@@ -122,10 +126,7 @@ def main():
         gap = PIPE_GAP
         min_pipe_y = gap + 50
         max_pipe_y = SCREEN_HEIGHT - gap - BASE_HEIGHT - 50
-        if min_pipe_y > max_pipe_y:
-            y = (SCREEN_HEIGHT - BASE_HEIGHT) // 2
-        else:
-            y = random.randint(min_pipe_y, max_pipe_y)
+        y = random.randint(min_pipe_y, max_pipe_y) if min_pipe_y <= max_pipe_y else (SCREEN_HEIGHT - BASE_HEIGHT) // 2
         top_pipe = Pipe(SCREEN_WIDTH, y, False)
         bottom_pipe = Pipe(SCREEN_WIDTH, y, True)
         pipes.add(top_pipe, bottom_pipe)
@@ -163,22 +164,6 @@ def main():
             screen.blit(NUMBERS[int(digit)], (x_offset, 20))
             x_offset += NUMBERS[int(digit)].get_width()
 
-    def play_rickroll():
-        clip = VideoFileClip(RICKROLL_VIDEO_PATH)
-        clip.preview(fullscreen=True)
-        pygame.quit()
-        exit()
-
-    def toggle_noclip(state):
-        nonlocal noclip
-        noclip = bool(int(state))
-        reset_game()
-
-    def handle_console_command(command):
-        if command.startswith("/noclip"):
-            _, state = command.split()
-            toggle_noclip(state)
-
     running = True
     while running:
         for event in pygame.event.get():
@@ -189,7 +174,6 @@ def main():
                     show_console = not show_console
                 elif event.key == pygame.K_RETURN:
                     if show_console:
-                        handle_console_command(input_text)
                         input_text = ""
                 elif event.key == pygame.K_BACKSPACE:
                     if show_console:
@@ -221,6 +205,7 @@ def main():
             all_sprites.update()
             base.update()
 
+            # Оптимизация: Проверка столкновений только когда это действительно нужно
             if pygame.sprite.spritecollideany(bird, pipes, pygame.sprite.collide_mask):
                 bird.die()
                 game_over = True
@@ -233,16 +218,14 @@ def main():
             for pipe in pipes:
                 if pipe.rect.right < bird.rect.left and not pipe.passed:
                     pipe.passed = True
-                    score += 1
-                    POINT_SFX.play()
+                    if pipe.rect.bottom > SCREEN_HEIGHT // 2:
+                        score += 1
+                        POINT_SFX.play()
 
-                    if score == 98:
-                        play_rickroll()
-
+        # Отрисовка элементов
         screen.blit(BACKGROUND, (0, 0))
         all_sprites.draw(screen)
         base.draw(screen)
-
         draw_score()
 
         if game_over:
@@ -257,7 +240,7 @@ def main():
             screen.blit(console_text, (10, SCREEN_HEIGHT - 25))
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(FPS)  # Ограничение FPS до 60
 
     pygame.quit()
 
