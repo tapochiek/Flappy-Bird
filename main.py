@@ -1,6 +1,3 @@
-"""
-Flappy Bird - улучшенная версия с оптимизированной архитектурой
-"""
 import pygame
 import random
 from config import *
